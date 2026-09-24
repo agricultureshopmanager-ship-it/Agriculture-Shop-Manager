@@ -1,0 +1,19 @@
+name: Keep Supabase Alive
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 */3 * *'
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Database
+        run: |
+          echo "URL is: ${{ secrets.SUPABASE_URL }}"
+          echo "Key length is:"
+          echo -n "${{ secrets.SUPABASE_KEY }}" | wc -c
+          curl -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/keepalive?select=id&limit=1" \
+          -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
+          --fail --silent --show-error
+          echo "✅ Supabase pinged successfully"
