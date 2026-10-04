@@ -4620,6 +4620,315 @@ table tbody tr:hover {
   }, 500);
 })();
 </script>
+<style>
+/* ============================================================
+   PRODUCT CARD REDESIGN
+   ============================================================ */
+/* Image Box */
+.prod-img-box {
+  width: 55px; height: 55px; border-radius: 12px;
+  background: #f0fdf4; border: 1px solid #dcfce7;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: #16a34a; font-weight: bold;
+  flex-shrink: 0; overflow: hidden;
+}
+.prod-img-box img { width: 100%; height: 100%; object-fit: cover; }
 
+/* Product Name & Text */
+.prod-name {
+  font-family: 'Poppins', 'Inter', system-ui, sans-serif;
+  font-weight: 700; font-size: 15px; color: #1e293b;
+  line-height: 1.2; margin-bottom: 2px;
+}
+.prod-company {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+  color: #64748b; font-weight: 600;
+}
+.prod-tech-name {
+  font-size: 11px; color: #3b82f6; font-weight: 500; margin-bottom: 4px;
+}
+
+/* Stock & Price Display */
+.prod-stock-main {
+  font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 6px;
+}
+.prod-pack-price {
+  font-size: 11px; color: #e65100; font-weight: 600; margin-top: 2px;
+}
+
+/* Button Colors */
+.btn-danger { background: #ef4444 !important; color: white !important; border: none !important; }
+.btn-danger:hover { background: #dc2626 !important; }
+.btn-success { background: #22c55e !important; color: white !important; border: none !important; }
+.btn-success:hover { background: #16a34a !important; }
+.btn-secondary { background: #f1f5f9 !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; }
+.btn-secondary:hover { background: #e2e8f0 !important; }
+
+/* Button Layout */
+.prod-btn-group { display: flex; flex-direction: column; gap: 5px; }
+.prod-btn-group .btn { padding: 4px 10px; font-size: 11px; justify-content: center; }
+</style>
+   <script>
+// ==========================================
+// PRODUCT CARD & FORM REDESIGN OVERRIDE
+// ==========================================
+(function() {
+  
+  // --- 1. OVERRIDE PRODUCT FORM ---
+  const originalOpenProductForm = window.openProductForm;
+  window.openProductForm = function(existing) {
+    const p = existing || { name:'', dual:false, unit:'kg', base_unit:'kg', pack_unit:'bag', pack_size:50, price:0, cost:0, price_base:0, price_pack:0, stock:0, low_stock_alert:5, category:'', primary_unit:'base_unit', image_url:'', technical_name:'', company_name:'' };
+    const CATEGORIES = ['Insecticide', 'Fungicide', 'Herbicide', 'Spreader', 'PGR', 'Bio stimulant', 'Fertilizer', 'Micro Nutrient'];
+    const catOptions = CATEGORIES.map(c => `<option value="${c}" ${p.category === c ? 'selected' : ''}>${c}</option>`).join('');
+
+    openModal(`
+      <h2 style="font-size:16px;font-weight:600;margin-bottom:12px">${existing?'Edit Product':'New Product'}</h2>
+      <form id="prf" style="display:flex;flex-direction:column;gap:12px">
+        
+        <!-- NEW FIELDS -->
+        <div class="grid-3">
+          <div><label class="label">Company Name</label><input class="input" name="company_name" value="${esc(p.company_name||'')}" placeholder="e.g. Bayer, Syngenta"></div>
+          <div><label class="label">Technical Name</label><input class="input" name="technical_name" value="${esc(p.technical_name||'')}" placeholder="e.g. Sulphur 80% WP"></div>
+          <div><label class="label">Image URL</label><input class="input" name="image_url" value="${esc(p.image_url||'')}" placeholder="https://..."></div>
+        </div>
+        <div style="border-bottom:1px solid var(--s200);margin:4px 0"></div>
+
+        <div><label class="label">Name *</label><input class="input" name="name" required value="${esc(p.name)}"></div>
+        <div class="grid-2">
+          <div><label class="label">Category</label><select class="input" name="category"><option value="">-- Select Category --</option>${catOptions}</select></div>
+          <div><label class="label">Dual Unit</label><select class="input" name="dual"><option value="no" ${!p.dual?'selected':''}>No - single unit</option><option value="yes" ${p.dual?'selected':''}>Yes - loose + pack</option></select></div>
+        </div>
+        
+        <div id="single-block" style="display:${p.dual?'none':'block'}">
+          <div class="grid-2">
+            <div><label class="label">Unit</label><select class="input" name="unit">${BASE_UNITS.concat(PACK_UNITS).filter((v,i,a)=>a.indexOf(v)===i).map(u=>`<option ${p.unit===u?'selected':''}>${u}</option>`).join('')}</select></div>
+            <div><label class="label">Sell price / unit (₹)</label><input class="input" type="number" step="any" name="price" value="${p.price||0}"></div>
+            <div><label class="label">Cost price / unit (₹)</label><input class="input" type="number" step="any" name="single_cost" value="${p.cost||0}"></div>
+            <div><label class="label">Stock</label><input class="input" type="number" step="any" name="stock1" value="${p.stock||0}"></div>
+            <div><label class="label">Low alert at</label><input class="input" type="number" name="low1" value="${p.low_stock_alert||5}"></div>
+          </div>
+        </div>
+        
+        <div id="dual-block" style="display:${p.dual?'block':'none'}">
+          <div class="grid-2">
+            <div><label class="label">Base unit</label><select class="input" name="base_unit">${BASE_UNITS.map(u=>`<option ${p.base_unit===u?'selected':''}>${u}</option>`).join('')}</select></div>
+            <div><label class="label">Pack unit</label><select class="input" name="pack_unit">${PACK_UNITS.map(u=>`<option ${p.pack_unit===u?'selected':''}>${u}</option>`).join('')}</select></div>
+          </div>
+          <div style="margin-top:10px"><label class="label">1 <span class="pk-lbl">${p.pack_unit}</span> = <input class="input" type="number" step="any" name="pack_size" id="pack_size_input" value="${p.pack_size||50}" style="display:inline-block;width:100px;margin:0 6px"> <span class="bs-lbl">${p.base_unit}</span></label></div>
+          <div class="grid-2" style="margin-top:10px">
+            <div><label class="label">Sell / base unit (₹)</label><input class="input" type="number" step="any" name="price_base" value="${p.price_base||0}"></div>
+            <div><label class="label">Sell / pack (₹)</label><input class="input" type="number" step="any" name="price_pack" value="${p.price_pack||0}"></div>
+            <div><label class="label">Cost / base unit (₹)</label><input class="input" type="number" step="any" name="dual_cost_base" id="cost_base_input" value="${p.cost||0}"></div>
+            <div><label class="label" style="color:#e65100;">Cost / pack (₹) - Auto</label><input class="input" type="number" step="any" name="cost_pack" id="cost_pack_input" value="${(p.cost > 0 && p.pack_size > 0) ? (p.cost * p.pack_size).toFixed(2) : 0}" style="border-color:#ffcc80;"></div>
+            <div><label class="label">Stock (base unit)</label><input class="input" type="number" step="any" name="stock2" value="${p.stock||0}"></div>
+            <div><label class="label">Low alert (base unit)</label><input class="input" type="number" name="low2" value="${p.low_stock_alert||5}"></div>
+          </div>
+          <div style="margin-top:10px"><label class="label">Primary display</label><select class="input" name="primary_unit"><option value="base_unit" ${p.primary_unit==='base_unit'?'selected':''}>Base unit first</option><option value="pack_unit" ${p.primary_unit==='pack_unit'?'selected':''}>Pack unit first</option></select></div>
+        </div>
+        
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" id="prf-save">${existing?'Update':'Save'}</button>
+        </div>
+      </form>`, root => {
+      setTimeout(() => {
+        try {
+          const costBase = root.querySelector('#cost_base_input'); const costPack = root.querySelector('#cost_pack_input'); const packSize = root.querySelector('#pack_size_input');
+          const dualSel = root.querySelector('[name="dual"]'); const singleB = root.querySelector('#single-block'); const dualB = root.querySelector('#dual-block');
+          const bu = root.querySelector('[name="base_unit"]'); const pu = root.querySelector('[name="pack_unit"]');
+          if (costPack && costBase && packSize) {
+            const syncCosts = () => { const baseVal = Number(costBase.value) || 0; const sizeVal = Number(packSize.value) || 1; if(document.activeElement === costPack) { costBase.value = (Number(costPack.value) / sizeVal).toFixed(4); } else if (document.activeElement === costBase) { costPack.value = (baseVal * sizeVal).toFixed(2); } };
+            costPack.addEventListener('input', syncCosts); costBase.addEventListener('input', syncCosts); packSize.addEventListener('input', syncCosts);
+          }
+          if (dualSel && singleB && dualB) { dualSel.onchange = () => { const isDual = dualSel.value === 'yes'; singleB.style.display = isDual?'none':'block'; dualB.style.display = isDual?'block':'none'; }; }
+          if (bu && pu) { const upLbls = () => { root.querySelectorAll('.pk-lbl').forEach(e=>e.textContent=pu.value); root.querySelectorAll('.bs-lbl').forEach(e=>e.textContent=bu.value); }; bu.onchange = upLbls; pu.onchange = upLbls; upLbls(); }
+        } catch(err) { console.log("Form setup skipped:", err.message); }
+      }, 100);
+      
+      root.querySelector('#prf').onsubmit = async e => {
+        e.preventDefault();
+        const fd = new FormData(e.target); const isDual = fd.get('dual') === 'yes'; const name = (fd.get('name')||'').trim();
+        if(!name){ toast('Enter product name','error'); return; }
+        
+        let data;
+        const baseData = {
+          name: name,
+          company_name: fd.get('company_name') || '',
+          technical_name: fd.get('technical_name') || '',
+          image_url: fd.get('image_url') || '',
+          category: fd.get('category') || '',
+          dual: isDual
+        };
+
+        if(isDual){
+          const packSizeEl = root.querySelector('#pack_size_input'); const costPackEl = root.querySelector('#cost_pack_input'); const costBaseEl = root.querySelector('#cost_base_input');
+          const ps = packSizeEl ? (Number(packSizeEl.value) || 1) : 1; const costPackVal = costPackEl ? (Number(costPackEl.value) || 0) : 0; const costBaseVal = costBaseEl ? (Number(costBaseEl.value) || 0) : 0;
+          const finalCostBase = costPackVal > 0 ? (costPackVal / ps) : costBaseVal;
+          const roundedCostBase = Math.round(finalCostBase * 10000) / 10000;
+          data = { ...baseData, base_unit: fd.get('base_unit'), pack_unit: fd.get('pack_unit'), pack_size: ps, price_base: Number(fd.get('price_base'))||0, price_pack: Number(fd.get('price_pack'))||0, cost: roundedCostBase, stock: Number(fd.get('stock2'))||0, low_stock_alert: Number(fd.get('low2'))||0, primary_unit: fd.get('primary_unit')||'base_unit', unit: null, price: null };
+        } else {
+          data = { ...baseData, unit: fd.get('unit'), price: Number(fd.get('price'))||0, cost: Number(fd.get('single_cost'))||0, stock: Number(fd.get('stock1'))||0, low_stock_alert: Number(fd.get('low1'))||0, base_unit: null, pack_unit: null, pack_size: null, price_base: 0, price_pack: 0, primary_unit: 'base_unit' };
+        }
+        
+        if (!existing) { 
+          const duplicate = DB.products.find(x => x.name.toLowerCase() === name.toLowerCase() && (x.unit === fd.get('unit') || x.base_unit === fd.get('base_unit'))); 
+          if (duplicate) { existing = duplicate; toast('Product already exists. Updating existing card instead.', 'info'); } 
+        }
+        
+        const btn = root.querySelector('#prf-save'); btn.disabled = true; btn.textContent = 'Saving...';
+        let result;
+        if(existing) result = await sb.from('products').update(data).eq('id', existing.id).select().single();
+        else result = await sb.from('products').insert(data).select().single();
+        
+        if(result.error){ toast(result.error.message,'error'); btn.disabled = false; btn.textContent = existing?'Update':'Save'; return; }
+        await syncDB(); toast(existing?'Updated':'Added','success'); closeModal(); route();
+      };
+    });
+  };
+
+  // --- 2. OVERRIDE PRODUCT GRID RENDERING ---
+  const originalRenderProducts = window.renderProducts;
+  window.renderProducts = function(content) {
+    originalRenderProducts.call(this, content); // Call original to setup filters and headers
+
+    const grid = content.querySelector('#prod-grid');
+    if (!grid) return;
+
+    // We will completely rebuild the grid innerHTML to match the new design
+    function drawNewGrid() {
+      const searchVal = (content.querySelector('#prod-search')?.value || '').toLowerCase().trim();
+      const catVal = content.querySelector('#prod-cat')?.value || '';
+      const sortVal = content.querySelector('#prod-sort')?.value || 'name';
+      const filterVal = content.querySelector('#prod-filter')?.value || '';
+
+      // Filter Logic
+      let arr = DB.products.filter(p => {
+        const hay = (p.name+' '+(p.category||'')+' '+(p.unit||'')+' '+(p.base_unit||'')+' '+(p.pack_unit||'')+' '+(p.pack_size||'')+' '+(p.company_name||'')+' '+(p.technical_name||'')).toLowerCase();
+        if(searchVal && !hay.includes(searchVal)) return false;
+        if(catVal && p.category !== catVal) return false;
+        if(filterVal === 'low' && !isLowStock(p)) return false;
+        if(filterVal === 'out' && !isOutOfStock(p)) return false;
+        return true;
+      });
+
+      // Sort Logic
+      if(sortVal === 'name') arr.sort((a,b)=>a.name.localeCompare(b.name));
+      else if(sortVal === 'name-desc') arr.sort((a,b)=>b.name.localeCompare(a.name));
+      else if(sortVal === 'stock') arr.sort((a,b)=>Number(a.stock)-Number(b.stock));
+      else if(sortVal === 'stock-desc') arr.sort((a,b)=>Number(b.stock)-Number(a.stock));
+
+      if (arr.length === 0) {
+        grid.innerHTML = `<div class="card" style="grid-column:1/-1;text-align:center;padding:40px"><div style="font-size:48px">(none)</div><p style="color:var(--s500);margin:10px 0">No products match</p></div>`;
+        return;
+      }
+
+      grid.innerHTML = arr.map(p => {
+        const isDual = p.dual;
+        const baseUnit = isDual ? p.base_unit : p.unit;
+        const packUnit = isDual ? p.pack_unit : '';
+        const packSize = isDual ? Number(p.pack_size) : 1;
+        
+        // Stock Calculation
+        let stockDisplay = '';
+        if (isDual) {
+          const packs = packSize > 0 ? (Number(p.stock) / packSize) : 0;
+          stockDisplay = `${fmtNum(p.stock)} ${baseUnit} (${fmtNum(packs)} ${packUnit})`;
+        } else {
+          stockDisplay = `${fmtNum(p.stock)} ${baseUnit}`;
+        }
+
+        // Buying Price per Pack
+        let packBuyPrice = 0;
+        if (isDual && p.cost > 0 && packSize > 0) {
+          packBuyPrice = p.cost * packSize;
+        } else {
+          packBuyPrice = p.cost;
+        }
+        const packUnitLabel = isDual ? packUnit : baseUnit;
+
+        // Image Box
+        const imgHTML = p.image_url 
+          ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" onerror="this.style.display='none'; this.parentElement.innerHTML='P';">` 
+          : 'P';
+
+        // Stock Badge
+        let badge = '';
+        if (isOutOfStock(p)) badge = '<span style="background:#e2e8f0;color:#475569;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600">OUT OF STOCK</span>';
+        else if (isLowStock(p)) badge = '<span style="background:#fee2e2;color:#b91c1c;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600">LOW</span>';
+        else badge = '<span style="background:#dcfce7;color:#15803d;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600">OK</span>';
+
+        return `
+          <div class="card" style="padding:14px; display:flex; flex-direction:column; gap:10px;">
+            
+            <!-- TOP SECTION: Image, Name, Company, Tech Name -->
+            <div style="display:flex; gap:12px; align-items:flex-start;">
+              <div class="prod-img-box">${imgHTML}</div>
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:4px;">
+                  <div class="prod-company">${esc(p.company_name || 'Generic')}</div>
+                  ${badge}
+                </div>
+                <div class="prod-name">${esc(p.name)}</div>
+                ${p.technical_name ? `<div class="prod-tech-name">${esc(p.technical_name)}</div>` : ''}
+              </div>
+            </div>
+
+            <!-- MIDDLE SECTION: Stock & Buying Price -->
+            <div style="background: var(--s50); padding:10px; border-radius:10px; border:1px solid var(--s100);">
+              <div style="font-size:10px; color:var(--s500); font-weight:600; text-transform:uppercase;">Current Stock</div>
+              <div class="prod-stock-main">${stockDisplay}</div>
+              <div class="prod-pack-price">Buy/pack: ${rs(packBuyPrice)} / ${packUnitLabel}</div>
+            </div>
+
+            <!-- BOTTOM SECTION: Buttons -->
+            <div class="prod-btn-group" style="margin-top:auto; flex-direction:row; gap:6px;">
+              <button class="btn btn-success" style="flex:1;" data-restock="${p.id}">+ Stock</button>
+              <button class="btn btn-secondary" style="flex:1;" data-edit="${p.id}">Edit</button>
+              <button class="btn btn-danger" style="flex:1;" data-del="${p.id}">Del</button>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+
+      // Rebind Events (since we wiped innerHTML)
+      grid.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+        const p = DB.products.find(x => x.id === b.dataset.del);
+        if (!confirmDlg('Delete "' + (p?.name || 'product') + '"?', 'Confirm Delete')) return;
+        const { error } = await sb.from('products').delete().eq('id', b.dataset.del);
+        if (error) { toast(error.message, 'error'); return; }
+        await syncDB(); toast('Deleted', 'success'); drawNewGrid();
+      });
+
+      grid.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => {
+        const p = DB.products.find(x => x.id === b.dataset.edit);
+        openProductForm(p);
+      });
+
+      grid.querySelectorAll('[data-restock]').forEach(b => b.onclick = (e) => {
+        e.preventDefault(); const pId = b.getAttribute('data-restock'); const p = DB.products.find(x => x.id === pId); if (!p) return;
+        const isDual = p.dual; const baseUnit = isDual ? p.base_unit : p.unit; const packUnit = isDual ? p.pack_unit : ''; const packSize = isDual ? Number(p.pack_size) : 1;
+        const currentStockDisplay = isDual ? `${fmtNum(p.stock)} ${baseUnit} (${fmtNum(Number(p.stock)/packSize)} ${packUnit})` : `${fmtNum(p.stock)} ${p.unit}`;
+        openModal(`<h2 style="font-size:16px;font-weight:600;margin-bottom:12px">Restock: ${esc(p.name)}</h2><div style="background:var(--s50);padding:10px;border-radius:8px;margin-bottom:12px;font-size:13px">Current Stock: <b>${currentStockDisplay}</b></div><form id="restock-form" style="display:flex;flex-direction:column;gap:12px">${isDual ? `<div><label class="label">Adding by</label><select class="input" name="add_type"><option value="pack">${packUnit} (1 ${packUnit} = ${packSize} ${baseUnit})</option><option value="base">${baseUnit}</option></select></div>` : ''}<div><label class="label">Quantity to Add *</label><input class="input" type="number" step="0.01" name="qty" required autofocus placeholder="e.g. 5"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="restock-save">Add Stock</button></div></form>`, root => {
+          root.querySelector('#restock-form').onsubmit = async e => { e.preventDefault(); const fd = new FormData(e.target); const qty = Number(fd.get('qty')) || 0; if (qty <= 0) { toast('Quantity must be > 0', 'error'); return; } const addType = isDual ? fd.get('add_type') : 'base'; let addedBaseQty = qty; if (isDual && addType === 'pack') addedBaseQty = qty * packSize; const newStock = (Number(p.stock) || 0) + addedBaseQty; const btn = root.querySelector('#restock-save'); btn.disabled = true; btn.textContent = 'Updating...'; const { error } = await sb.from('products').update({ stock: newStock }).eq('id', p.id); if (error) { toast(error.message, 'error'); btn.disabled = false; btn.textContent = 'Add Stock'; return; } await syncDB(); toast('Stock added successfully!', 'success'); closeModal(); drawNewGrid(); };
+        });
+      });
+    }
+
+    // Initial Draw
+    drawNewGrid();
+
+    // Rebind Filter/Sort Inputs to trigger the new grid draw
+    ['prod-search', 'prod-cat', 'prod-sort', 'prod-filter'].forEach(id => {
+      const el = content.querySelector('#' + id);
+      if (el) {
+        el.oninput = drawNewGrid;
+        el.onchange = drawNewGrid;
+      }
+    });
+  };
+})();
+</script>
+   
 </body>
 </html>
