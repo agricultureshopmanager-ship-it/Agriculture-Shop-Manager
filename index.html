@@ -4477,7 +4477,7 @@ tr:hover td { background: rgba(230, 240, 250, 0.55) !important; }
 </script>
 <style>
 /* ============================================================
-   1. PC OPTIMIZATION (Fixes stretched layout on desktop)
+   1. PC OPTIMIZATION
    ============================================================ */
 @media (min-width: 1024px) {
   .layout { max-width: 1600px; margin: 0 auto; box-shadow: 0 0 40px rgba(0,0,0,0.05); }
@@ -4490,7 +4490,7 @@ tr:hover td { background: rgba(230, 240, 250, 0.55) !important; }
 }
 
 /* ============================================================
-   2. CARD HOVER EFFECT (Lift + Glow, excluding specific cards)
+   2. CARD HOVER (Lift + Glow, excluding specific cards)
    ============================================================ */
 .card {
   transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
@@ -4504,32 +4504,21 @@ tr:hover td { background: rgba(230, 240, 250, 0.55) !important; }
 }
 
 /* ============================================================
-   3. LINK HOVER (For Invoice & Customer names)
+   3. LINK HOVER (Invoice & Customer names)
    ============================================================ */
 a[href^="#/invoice/"], a[href^="#/customer/"] {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  font-weight: 600;
-  margin-left: -8px; 
+  display: inline-block; padding: 2px 8px; border-radius: 6px;
+  transition: all 0.2s ease; font-weight: 600; margin-left: -8px; 
 }
 a[href^="#/invoice/"]:hover, a[href^="#/customer/"]:hover {
   background: rgba(34, 197, 94, 0.25) !important;
-  color: #15803d !important;
-  transform: scale(1.03);
-  text-decoration: none;
+  color: #15803d !important; transform: scale(1.03); text-decoration: none;
 }
 
 /* ============================================================
-   4. TABLE ROW HOVER - GLASS PILL STYLE
+   4. TABLE ROW HOVER (Glass Pill)
    ============================================================ */
-table tbody tr {
-  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  position: relative;
-}
-
-/* Override the old grey hover completely */
+table tbody tr { transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; }
 table tbody tr:hover td {
   background: rgba(22, 163, 74, 0.10) !important;
   color: #15803d !important;
@@ -4537,54 +4526,70 @@ table tbody tr:hover td {
   border-bottom: 1px solid rgba(255, 255, 255, 0.85) !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 1), 0 4px 12px rgba(22, 163, 74, 0.12) !important;
 }
-
-/* Round the left edge of the pill */
 table tbody tr:hover td:first-child {
   border-left: 1px solid rgba(255, 255, 255, 0.85) !important;
-  border-top-left-radius: 999px !important;
-  border-bottom-left-radius: 999px !important;
+  border-top-left-radius: 999px !important; border-bottom-left-radius: 999px !important;
   padding-left: 16px !important;
 }
-
-/* Round the right edge of the pill */
 table tbody tr:hover td:last-child {
   border-right: 1px solid rgba(255, 255, 255, 0.85) !important;
-  border-top-right-radius: 999px !important;
-  border-bottom-right-radius: 999px !important;
+  border-top-right-radius: 999px !important; border-bottom-right-radius: 999px !important;
   padding-right: 16px !important;
 }
+table tbody tr:hover { transform: scale(1.01) translateY(-2px); z-index: 10; }
 
-/* Make the whole row pop slightly */
-table tbody tr:hover {
-  transform: scale(1.01) translateY(-2px);
-  z-index: 10;
+/* ============================================================
+   5. PRODUCT CARD REDESIGN (Solid Buttons, Hide Old Footer)
+   ============================================================ */
+.stock-value-box { display: none !important; } /* Hides the old Cost/Retail footer */
+
+.prod-btn-group .btn {
+  border-radius: 8px !important; box-shadow: none !important;
+  border: none !important; font-weight: 600 !important;
+  padding: 8px 10px !important; font-size: 12px !important;
+  transition: opacity 0.2s ease !important;
 }
+.prod-btn-group .btn:hover { opacity: 0.85 !important; transform: none !important; }
+.prod-btn-group .btn-success { background: #22c55e !important; color: #ffffff !important; }
+.prod-btn-group .btn-secondary { background: #94a3b8 !important; color: #ffffff !important; }
+.prod-btn-group .btn-danger { background: #ef4444 !important; color: #ffffff !important; }
+
+.prod-img-box {
+  width: 60px; height: 60px; border-radius: 10px; background: #f0fdf4;
+  border: 1px solid #dcfce7; display: flex; align-items: center; justify-content: center;
+  font-size: 24px; color: #16a34a; font-weight: bold; flex-shrink: 0; overflow: hidden;
+}
+.prod-img-box img { width: 100%; height: 100%; object-fit: cover; }
+
+.prod-company { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 700; margin-bottom: 2px; }
+.prod-name { font-family: 'Poppins', 'Inter', system-ui, sans-serif; font-weight: 700; font-size: 15px; color: #1e293b; line-height: 1.2; margin-bottom: 2px; }
+.prod-tech-name { font-size: 11px; color: #3b82f6; font-weight: 500; }
+
+.prod-stock-box { background: #f8fafc; padding: 10px 12px; border-radius: 10px; border: 1px solid #e2e8f0; }
+.prod-stock-label { font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.prod-stock-main { font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 2px; }
+.prod-pack-price { font-size: 11px; color: #e65100; font-weight: 600; margin-top: 2px; }
 </style>
-<script>
+  <script>
 // ==========================================
-// SIDEBAR MAGNETIC PULL EFFECT (Optimized)
+// SIDEBAR MAGNETIC PULL & EXCLUDE CUSTOMER CARD
 // ==========================================
 (function() {
+  // 1. Sidebar Magnetic Pull
   let ticking = false;
-
   document.addEventListener('mousemove', (e) => {
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar || window.innerWidth <= 768) return;
-
     if (!ticking) {
       window.requestAnimationFrame(() => {
         const links = sidebar.querySelectorAll('.nav a');
-        const mouseX = e.clientX;
-        const mouseY = e.clientY;
-        const pullStrength = 0.15; 
-        const threshold = 120;     
-
+        const mouseX = e.clientX; const mouseY = e.clientY;
+        const pullStrength = 0.15; const threshold = 120;     
         links.forEach(link => {
           const linkRect = link.getBoundingClientRect();
           const linkX = linkRect.left + linkRect.width / 2;
           const linkY = linkRect.top + linkRect.height / 2;
           const dist = Math.hypot(mouseX - linkX, mouseY - linkY);
-
           if (dist < threshold) {
             const pullX = (mouseX - linkX) * pullStrength;
             const pullY = (mouseY - linkY) * pullStrength;
@@ -4600,13 +4605,8 @@ table tbody tr:hover {
       ticking = true;
     }
   });
-})();
-</script>
-<script>
-// ==========================================
-// TAG CUSTOMER PROFILE CARD (To exclude it from hover)
-// ==========================================
-(function() {
+
+  // 2. Tag Customer Profile Card to exclude from hover
   setInterval(() => {
     if (location.hash.startsWith('#/customer/')) {
       const content = document.getElementById('content');
@@ -4620,13 +4620,13 @@ table tbody tr:hover {
   }, 500);
 })();
 </script>
-<script>
+   <script>
 // ==========================================
-// PRODUCT CARD & FORM REDESIGN OVERRIDE (With Image Upload)
+// PRODUCT CARD & FORM REDESIGN OVERRIDE (Final)
 // ==========================================
 (function() {
   
-  // --- 1. OVERRIDE PRODUCT FORM (Adds Company, Tech Name, Image Upload) ---
+  // --- 1. OVERRIDE PRODUCT FORM ---
   const originalOpenProductForm = window.openProductForm;
   window.openProductForm = function(existing) {
     const p = existing || { name:'', dual:false, unit:'kg', base_unit:'kg', pack_unit:'bag', pack_size:50, price:0, cost:0, price_base:0, price_pack:0, stock:0, low_stock_alert:5, category:'', primary_unit:'base_unit', image_url:'', technical_name:'', company_name:'' };
@@ -4637,7 +4637,6 @@ table tbody tr:hover {
       <h2 style="font-size:16px;font-weight:600;margin-bottom:12px">${existing?'Edit Product':'New Product'}</h2>
       <form id="prf" style="display:flex;flex-direction:column;gap:12px">
         
-        <!-- NEW FIELDS -->
         <div class="grid-2">
           <div><label class="label">Company Name</label><input class="input" name="company_name" value="${esc(p.company_name||'')}" placeholder="e.g. Bayer, Syngenta"></div>
           <div><label class="label">Technical Name</label><input class="input" name="technical_name" value="${esc(p.technical_name||'')}" placeholder="e.g. Sulphur 80% WP"></div>
@@ -4691,7 +4690,6 @@ table tbody tr:hover {
         </div>
       </form>`, root => {
       
-      // Handle Image Upload (Convert to Base64)
       const fileInput = root.querySelector('#prod_img_file');
       const hiddenUrl = root.querySelector('#prod_img_url');
       const preview = root.querySelector('#img_preview');
@@ -4702,7 +4700,7 @@ table tbody tr:hover {
           if (!file) return;
           const reader = new FileReader();
           reader.onload = (ev) => {
-            hiddenUrl.value = ev.target.result; // Save Base64 string
+            hiddenUrl.value = ev.target.result;
             preview.innerHTML = `<img src="${ev.target.result}" style="height:50px;border-radius:6px;border:1px solid #ddd;">`;
           };
           reader.readAsDataURL(file);
@@ -4730,12 +4728,9 @@ table tbody tr:hover {
         
         let data;
         const baseData = {
-          name: name,
-          company_name: fd.get('company_name') || '',
-          technical_name: fd.get('technical_name') || '',
-          image_url: fd.get('image_url') || '', // This now contains Base64 string
-          category: fd.get('category') || '',
-          dual: isDual
+          name: name, company_name: fd.get('company_name') || '',
+          technical_name: fd.get('technical_name') || '', image_url: fd.get('image_url') || '',
+          category: fd.get('category') || '', dual: isDual
         };
 
         if(isDual){
@@ -4768,15 +4763,14 @@ table tbody tr:hover {
   const originalRenderProducts = window.renderProducts;
   window.renderProducts = function(content) {
     originalRenderProducts.call(this, content); 
-
     const grid = content.querySelector('#prod-grid');
     if (!grid) return;
 
     function drawNewGrid() {
       const searchVal = (content.querySelector('#prod-search')?.value || '').toLowerCase().trim();
       const catVal = content.querySelector('#prod-cat')?.value || '';
-      const sortVal = content.querySelector('#prod-sort')?.value || 'name';
-      const filterVal = content.querySelector('#prod-filter')?.value || '';
+      const sortVal = (content.querySelector('#prod-sort')?.value || 'name');
+      const filterVal = (content.querySelector('#prod-filter')?.value || '');
 
       let arr = DB.products.filter(p => {
         const hay = (p.name+' '+(p.category||'')+' '+(p.unit||'')+' '+(p.base_unit||'')+' '+(p.pack_unit||'')+' '+(p.pack_size||'')+' '+(p.company_name||'')+' '+(p.technical_name||'')).toLowerCase();
@@ -4803,30 +4797,21 @@ table tbody tr:hover {
         const packUnit = isDual ? p.pack_unit : '';
         const packSize = isDual ? Number(p.pack_size) : 1;
         
-        let stockDisplay = '';
-        if (isDual) {
-          const packs = packSize > 0 ? (Number(p.stock) / packSize) : 0;
-          stockDisplay = `${fmtNum(p.stock)} ${baseUnit} (${fmtNum(packs)} ${packUnit})`;
-        } else {
-          stockDisplay = `${fmtNum(p.stock)} ${baseUnit}`;
-        }
+        let stockDisplay = isDual 
+          ? `${fmtNum(p.stock)} ${baseUnit} (${fmtNum(packSize > 0 ? (Number(p.stock) / packSize) : 0)} ${packUnit})`
+          : `${fmtNum(p.stock)} ${baseUnit}`;
 
-        let packBuyPrice = 0;
-        if (isDual && p.cost > 0 && packSize > 0) {
-          packBuyPrice = p.cost * packSize;
-        } else {
-          packBuyPrice = p.cost;
-        }
+        let packBuyPrice = (isDual && p.cost > 0 && packSize > 0) ? (p.cost * packSize) : p.cost;
         const packUnitLabel = isDual ? packUnit : baseUnit;
 
         const imgHTML = p.image_url 
-          ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" onerror="this.style.display='none'; this.parentElement.innerHTML='P';">` 
-          : 'P';
+          ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" onerror="this.style.display='none'; this.parentElement.innerHTML='📦';">` 
+          : '📦';
 
         let badge = '';
-        if (isOutOfStock(p)) badge = '<span style="background:#e2e8f0;color:#475569;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600">OUT OF STOCK</span>';
-        else if (isLowStock(p)) badge = '<span style="background:#fee2e2;color:#b91c1c;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600">LOW</span>';
-        else badge = '<span style="background:#dcfce7;color:#15803d;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600">OK</span>';
+        if (isOutOfStock(p)) badge = '<span style="background:#e2e8f0;color:#475569;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700">OUT OF STOCK</span>';
+        else if (isLowStock(p)) badge = '<span style="background:#fee2e2;color:#b91c1c;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700">LOW</span>';
+        else badge = '<span style="background:#dcfce7;color:#15803d;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700">OK</span>';
 
         return `
           <div class="card" style="padding:14px; display:flex; flex-direction:column; gap:10px;">
@@ -4841,12 +4826,14 @@ table tbody tr:hover {
                 ${p.technical_name ? `<div class="prod-tech-name">${esc(p.technical_name)}</div>` : ''}
               </div>
             </div>
-            <div style="background: var(--s50); padding:10px; border-radius:10px; border:1px solid var(--s100);">
-              <div style="font-size:10px; color:var(--s500); font-weight:600; text-transform:uppercase;">Current Stock</div>
+            
+            <div class="prod-stock-box">
+              <div class="prod-stock-label">Current Stock</div>
               <div class="prod-stock-main">${stockDisplay}</div>
               <div class="prod-pack-price">Buy/pack: ${rs(packBuyPrice)} / ${packUnitLabel}</div>
             </div>
-            <div class="prod-btn-group" style="margin-top:auto; flex-direction:row; gap:6px;">
+            
+            <div class="prod-btn-group" style="margin-top:auto; display:flex; gap:6px;">
               <button class="btn btn-success" style="flex:1;" data-restock="${p.id}">+ Stock</button>
               <button class="btn btn-secondary" style="flex:1;" data-edit="${p.id}">Edit</button>
               <button class="btn btn-danger" style="flex:1;" data-del="${p.id}">Del</button>
@@ -4882,14 +4869,10 @@ table tbody tr:hover {
 
     ['prod-search', 'prod-cat', 'prod-sort', 'prod-filter'].forEach(id => {
       const el = content.querySelector('#' + id);
-      if (el) {
-        el.oninput = drawNewGrid;
-        el.onchange = drawNewGrid;
-      }
+      if (el) { el.oninput = drawNewGrid; el.onchange = drawNewGrid; }
     });
   };
 })();
 </script>
-
 </body>
 </html>
