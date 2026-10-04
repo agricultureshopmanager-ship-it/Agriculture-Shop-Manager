@@ -4581,5 +4581,71 @@ a[href^="#/invoice/"]:hover, a[href^="#/customer/"]:hover {
   }, 500);
 })();
 </script>
+<style>
+/* ============================================================
+   1. PC OPTIMIZATION (Fixes stretched layout on desktop)
+   ============================================================ */
+@media (min-width: 1024px) {
+  .layout { max-width: 1600px; margin: 0 auto; box-shadow: 0 0 40px rgba(0,0,0,0.05); }
+  .main { max-width: 1300px !important; padding: 30px !important; }
+  body { font-size: 15px; }
+  td, th { padding: 16px 12px !important; }
+  .grid-4 { grid-template-columns: repeat(4, 1fr) !important; }
+  .grid-3 { grid-template-columns: repeat(3, 1fr) !important; }
+  .grid-2 { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* ============================================================
+   2. CARD HOVER EFFECT (Lift + Glow, excluding specific cards)
+   ============================================================ */
+.card {
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              box-shadow 0.25s ease !important;
+}
+.card:not(#print-area):not(.no-hover-card):hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12), 
+              0 0 0 1px rgba(34, 197, 94, 0.2) !important;
+  z-index: 10;
+}
+
+/* ============================================================
+   3. LINK HOVER (For Invoice & Customer names)
+   ============================================================ */
+a[href^="#/invoice/"], a[href^="#/customer/"] {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-weight: 600;
+  margin-left: -8px; 
+}
+a[href^="#/invoice/"]:hover, a[href^="#/customer/"]:hover {
+  background: rgba(34, 197, 94, 0.25) !important;
+  color: #15803d !important;
+  transform: scale(1.03);
+  text-decoration: none;
+}
+
+/* ============================================================
+   4. TABLE ROW HOVER EFFECT (New - Applies to all lists)
+   ============================================================ */
+/* Smooth transition for table rows */
+table tbody tr {
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Override the default grey hover with a glassy green tint */
+table tbody tr:hover td {
+  background: rgba(34, 197, 94, 0.08) !important;
+  box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.15);
+}
+
+/* Add a subtle left accent bar to the hovered row */
+table tbody tr:hover td:first-child {
+  border-left: 3px solid #22c55e;
+  padding-left: 9px !important; /* Adjust padding to prevent text jump */
+}
+</style>
 </body>
 </html>
