@@ -4620,61 +4620,13 @@ table tbody tr:hover {
   }, 500);
 })();
 </script>
-<style>
-/* ============================================================
-   PRODUCT CARD REDESIGN
-   ============================================================ */
-/* Image Box */
-.prod-img-box {
-  width: 55px; height: 55px; border-radius: 12px;
-  background: #f0fdf4; border: 1px solid #dcfce7;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px; color: #16a34a; font-weight: bold;
-  flex-shrink: 0; overflow: hidden;
-}
-.prod-img-box img { width: 100%; height: 100%; object-fit: cover; }
-
-/* Product Name & Text */
-.prod-name {
-  font-family: 'Poppins', 'Inter', system-ui, sans-serif;
-  font-weight: 700; font-size: 15px; color: #1e293b;
-  line-height: 1.2; margin-bottom: 2px;
-}
-.prod-company {
-  font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
-  color: #64748b; font-weight: 600;
-}
-.prod-tech-name {
-  font-size: 11px; color: #3b82f6; font-weight: 500; margin-bottom: 4px;
-}
-
-/* Stock & Price Display */
-.prod-stock-main {
-  font-size: 16px; font-weight: 700; color: #0f172a; margin-top: 6px;
-}
-.prod-pack-price {
-  font-size: 11px; color: #e65100; font-weight: 600; margin-top: 2px;
-}
-
-/* Button Colors */
-.btn-danger { background: #ef4444 !important; color: white !important; border: none !important; }
-.btn-danger:hover { background: #dc2626 !important; }
-.btn-success { background: #22c55e !important; color: white !important; border: none !important; }
-.btn-success:hover { background: #16a34a !important; }
-.btn-secondary { background: #f1f5f9 !important; color: #475569 !important; border: 1px solid #e2e8f0 !important; }
-.btn-secondary:hover { background: #e2e8f0 !important; }
-
-/* Button Layout */
-.prod-btn-group { display: flex; flex-direction: column; gap: 5px; }
-.prod-btn-group .btn { padding: 4px 10px; font-size: 11px; justify-content: center; }
-</style>
-   <script>
+<script>
 // ==========================================
-// PRODUCT CARD & FORM REDESIGN OVERRIDE
+// PRODUCT CARD & FORM REDESIGN OVERRIDE (With Image Upload)
 // ==========================================
 (function() {
   
-  // --- 1. OVERRIDE PRODUCT FORM ---
+  // --- 1. OVERRIDE PRODUCT FORM (Adds Company, Tech Name, Image Upload) ---
   const originalOpenProductForm = window.openProductForm;
   window.openProductForm = function(existing) {
     const p = existing || { name:'', dual:false, unit:'kg', base_unit:'kg', pack_unit:'bag', pack_size:50, price:0, cost:0, price_base:0, price_pack:0, stock:0, low_stock_alert:5, category:'', primary_unit:'base_unit', image_url:'', technical_name:'', company_name:'' };
@@ -4686,10 +4638,17 @@ table tbody tr:hover {
       <form id="prf" style="display:flex;flex-direction:column;gap:12px">
         
         <!-- NEW FIELDS -->
-        <div class="grid-3">
+        <div class="grid-2">
           <div><label class="label">Company Name</label><input class="input" name="company_name" value="${esc(p.company_name||'')}" placeholder="e.g. Bayer, Syngenta"></div>
           <div><label class="label">Technical Name</label><input class="input" name="technical_name" value="${esc(p.technical_name||'')}" placeholder="e.g. Sulphur 80% WP"></div>
-          <div><label class="label">Image URL</label><input class="input" name="image_url" value="${esc(p.image_url||'')}" placeholder="https://..."></div>
+        </div>
+        <div>
+          <label class="label">Product Image</label>
+          <input type="file" id="prod_img_file" accept="image/*" class="input" style="padding:6px;">
+          <input type="hidden" name="image_url" id="prod_img_url" value="${esc(p.image_url||'')}">
+          <div id="img_preview" style="margin-top:6px;">
+            ${p.image_url ? `<img src="${p.image_url}" style="height:50px;border-radius:6px;border:1px solid #ddd;">` : '<span style="font-size:11px;color:#888;">No image uploaded</span>'}
+          </div>
         </div>
         <div style="border-bottom:1px solid var(--s200);margin:4px 0"></div>
 
@@ -4731,6 +4690,25 @@ table tbody tr:hover {
           <button class="btn btn-primary" id="prf-save">${existing?'Update':'Save'}</button>
         </div>
       </form>`, root => {
+      
+      // Handle Image Upload (Convert to Base64)
+      const fileInput = root.querySelector('#prod_img_file');
+      const hiddenUrl = root.querySelector('#prod_img_url');
+      const preview = root.querySelector('#img_preview');
+      
+      if (fileInput) {
+        fileInput.onchange = (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            hiddenUrl.value = ev.target.result; // Save Base64 string
+            preview.innerHTML = `<img src="${ev.target.result}" style="height:50px;border-radius:6px;border:1px solid #ddd;">`;
+          };
+          reader.readAsDataURL(file);
+        };
+      }
+
       setTimeout(() => {
         try {
           const costBase = root.querySelector('#cost_base_input'); const costPack = root.querySelector('#cost_pack_input'); const packSize = root.querySelector('#pack_size_input');
@@ -4755,7 +4733,7 @@ table tbody tr:hover {
           name: name,
           company_name: fd.get('company_name') || '',
           technical_name: fd.get('technical_name') || '',
-          image_url: fd.get('image_url') || '',
+          image_url: fd.get('image_url') || '', // This now contains Base64 string
           category: fd.get('category') || '',
           dual: isDual
         };
@@ -4789,19 +4767,17 @@ table tbody tr:hover {
   // --- 2. OVERRIDE PRODUCT GRID RENDERING ---
   const originalRenderProducts = window.renderProducts;
   window.renderProducts = function(content) {
-    originalRenderProducts.call(this, content); // Call original to setup filters and headers
+    originalRenderProducts.call(this, content); 
 
     const grid = content.querySelector('#prod-grid');
     if (!grid) return;
 
-    // We will completely rebuild the grid innerHTML to match the new design
     function drawNewGrid() {
       const searchVal = (content.querySelector('#prod-search')?.value || '').toLowerCase().trim();
       const catVal = content.querySelector('#prod-cat')?.value || '';
       const sortVal = content.querySelector('#prod-sort')?.value || 'name';
       const filterVal = content.querySelector('#prod-filter')?.value || '';
 
-      // Filter Logic
       let arr = DB.products.filter(p => {
         const hay = (p.name+' '+(p.category||'')+' '+(p.unit||'')+' '+(p.base_unit||'')+' '+(p.pack_unit||'')+' '+(p.pack_size||'')+' '+(p.company_name||'')+' '+(p.technical_name||'')).toLowerCase();
         if(searchVal && !hay.includes(searchVal)) return false;
@@ -4811,7 +4787,6 @@ table tbody tr:hover {
         return true;
       });
 
-      // Sort Logic
       if(sortVal === 'name') arr.sort((a,b)=>a.name.localeCompare(b.name));
       else if(sortVal === 'name-desc') arr.sort((a,b)=>b.name.localeCompare(a.name));
       else if(sortVal === 'stock') arr.sort((a,b)=>Number(a.stock)-Number(b.stock));
@@ -4828,7 +4803,6 @@ table tbody tr:hover {
         const packUnit = isDual ? p.pack_unit : '';
         const packSize = isDual ? Number(p.pack_size) : 1;
         
-        // Stock Calculation
         let stockDisplay = '';
         if (isDual) {
           const packs = packSize > 0 ? (Number(p.stock) / packSize) : 0;
@@ -4837,7 +4811,6 @@ table tbody tr:hover {
           stockDisplay = `${fmtNum(p.stock)} ${baseUnit}`;
         }
 
-        // Buying Price per Pack
         let packBuyPrice = 0;
         if (isDual && p.cost > 0 && packSize > 0) {
           packBuyPrice = p.cost * packSize;
@@ -4846,12 +4819,10 @@ table tbody tr:hover {
         }
         const packUnitLabel = isDual ? packUnit : baseUnit;
 
-        // Image Box
         const imgHTML = p.image_url 
           ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" onerror="this.style.display='none'; this.parentElement.innerHTML='P';">` 
           : 'P';
 
-        // Stock Badge
         let badge = '';
         if (isOutOfStock(p)) badge = '<span style="background:#e2e8f0;color:#475569;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600">OUT OF STOCK</span>';
         else if (isLowStock(p)) badge = '<span style="background:#fee2e2;color:#b91c1c;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600">LOW</span>';
@@ -4859,8 +4830,6 @@ table tbody tr:hover {
 
         return `
           <div class="card" style="padding:14px; display:flex; flex-direction:column; gap:10px;">
-            
-            <!-- TOP SECTION: Image, Name, Company, Tech Name -->
             <div style="display:flex; gap:12px; align-items:flex-start;">
               <div class="prod-img-box">${imgHTML}</div>
               <div style="flex:1; min-width:0;">
@@ -4872,26 +4841,20 @@ table tbody tr:hover {
                 ${p.technical_name ? `<div class="prod-tech-name">${esc(p.technical_name)}</div>` : ''}
               </div>
             </div>
-
-            <!-- MIDDLE SECTION: Stock & Buying Price -->
             <div style="background: var(--s50); padding:10px; border-radius:10px; border:1px solid var(--s100);">
               <div style="font-size:10px; color:var(--s500); font-weight:600; text-transform:uppercase;">Current Stock</div>
               <div class="prod-stock-main">${stockDisplay}</div>
               <div class="prod-pack-price">Buy/pack: ${rs(packBuyPrice)} / ${packUnitLabel}</div>
             </div>
-
-            <!-- BOTTOM SECTION: Buttons -->
             <div class="prod-btn-group" style="margin-top:auto; flex-direction:row; gap:6px;">
               <button class="btn btn-success" style="flex:1;" data-restock="${p.id}">+ Stock</button>
               <button class="btn btn-secondary" style="flex:1;" data-edit="${p.id}">Edit</button>
               <button class="btn btn-danger" style="flex:1;" data-del="${p.id}">Del</button>
             </div>
-
           </div>
         `;
       }).join('');
 
-      // Rebind Events (since we wiped innerHTML)
       grid.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
         const p = DB.products.find(x => x.id === b.dataset.del);
         if (!confirmDlg('Delete "' + (p?.name || 'product') + '"?', 'Confirm Delete')) return;
@@ -4915,10 +4878,8 @@ table tbody tr:hover {
       });
     }
 
-    // Initial Draw
     drawNewGrid();
 
-    // Rebind Filter/Sort Inputs to trigger the new grid draw
     ['prod-search', 'prod-cat', 'prod-sort', 'prod-filter'].forEach(id => {
       const el = content.querySelector('#' + id);
       if (el) {
@@ -4929,6 +4890,6 @@ table tbody tr:hover {
   };
 })();
 </script>
-   
+
 </body>
 </html>
