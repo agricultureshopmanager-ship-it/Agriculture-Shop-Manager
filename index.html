@@ -4475,5 +4475,111 @@ tr:hover td { background: rgba(230, 240, 250, 0.55) !important; }
   addStatementButtons();
 })();
 </script>
+<style>
+/* ============================================================
+   1. PC OPTIMIZATION (Fixes stretched layout on desktop)
+   ============================================================ */
+@media (min-width: 1024px) {
+  .layout { max-width: 1600px; margin: 0 auto; box-shadow: 0 0 40px rgba(0,0,0,0.05); }
+  .main { max-width: 1300px !important; padding: 30px !important; }
+  body { font-size: 15px; }
+  td, th { padding: 16px 12px !important; }
+  .grid-4 { grid-template-columns: repeat(4, 1fr) !important; }
+  .grid-3 { grid-template-columns: repeat(3, 1fr) !important; }
+  .grid-2 { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* ============================================================
+   2. CARD HOVER EFFECT (Lift + Glow, excluding specific cards)
+   ============================================================ */
+.card {
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              box-shadow 0.25s ease !important;
+}
+.card:not(#print-area):not(.no-hover-card):hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12), 
+              0 0 0 1px rgba(34, 197, 94, 0.2) !important;
+  z-index: 10;
+}
+
+/* ============================================================
+   3. LINK HOVER (For Invoice & Customer names)
+   ============================================================ */
+a[href^="#/invoice/"], a[href^="#/customer/"] {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-weight: 600;
+  margin-left: -8px; 
+}
+a[href^="#/invoice/"]:hover, a[href^="#/customer/"]:hover {
+  background: rgba(34, 197, 94, 0.15) !important;
+  color: #15803d !important;
+  transform: scale(1.03);
+  text-decoration: none;
+}
+</style>
+<script>
+// ==========================================
+// SIDEBAR MAGNETIC PULL EFFECT (Optimized)
+// ==========================================
+(function() {
+  let ticking = false;
+
+  document.addEventListener('mousemove', (e) => {
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar || window.innerWidth <= 768) return;
+
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        const links = sidebar.querySelectorAll('.nav a');
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
+        const pullStrength = 0.15; 
+        const threshold = 120;     
+
+        links.forEach(link => {
+          const linkRect = link.getBoundingClientRect();
+          const linkX = linkRect.left + linkRect.width / 2;
+          const linkY = linkRect.top + linkRect.height / 2;
+          const dist = Math.hypot(mouseX - linkX, mouseY - linkY);
+
+          if (dist < threshold) {
+            const pullX = (mouseX - linkX) * pullStrength;
+            const pullY = (mouseY - linkY) * pullStrength;
+            link.style.transform = `translate(${pullX}px, ${pullY}px)`;
+            link.style.transition = 'transform 0.1s ease-out';
+          } else {
+            link.style.transform = '';
+            link.style.transition = 'transform 0.3s ease-out';
+          }
+        });
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+})();
+</script>
+<script>
+// ==========================================
+// TAG CUSTOMER PROFILE CARD (To exclude it from hover)
+// ==========================================
+(function() {
+  setInterval(() => {
+    if (location.hash.startsWith('#/customer/')) {
+      const content = document.getElementById('content');
+      if (content) {
+        const firstCard = content.querySelector('.card');
+        if (firstCard && !firstCard.classList.contains('no-hover-card')) {
+          firstCard.classList.add('no-hover-card');
+        }
+      }
+    }
+  }, 500);
+})();
+</script>
 </body>
 </html>
