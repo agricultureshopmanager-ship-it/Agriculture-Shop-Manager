@@ -4928,5 +4928,256 @@ table tbody tr:hover { transform: scale(1.01) translateY(-2px); z-index: 10; }
   transform: translateY(-3px) !important;
 }
 </style>
+   <style>
+/* ============================================================
+   DARK THEME OVERRIDE
+   Paste at the very bottom before </body>
+   ============================================================ */
+
+/* ---------- 1. Root variables ---------- */
+:root {
+  --b50: #052e16;
+  --b100: #064e3b;
+  --b500: #4ade80;
+  --b600: #22c55e;
+  --b700: #86efac;
+  --s50: #0f172a;
+  --s100: #1e293b;
+  --s200: #334155;
+  --s300: #475569;
+  --s400: #64748b;
+  --s500: #94a3b8;
+  --s600: #cbd5e1;
+  --s700: #e2e8f0;
+  --s800: #f1f5f9;
+  --r500: #ef4444;
+  --r600: #f87171;
+  --am: #fbbf24;
+  --gold: #fbbf24;
+}
+
+/* ---------- 2. Body & backdrop ---------- */
+html, body {
+  background: #0a0f1c !important;
+  color: #e2e8f0 !important;
+}
+body {
+  background-image:
+    radial-gradient(120% 90% at 50% 0%,
+      #111827 0%,
+      #0a0f1c 50%,
+      #050810 100%),
+    radial-gradient(60% 40% at 15% 100%,
+      rgba(34, 197, 94, 0.06) 0%, transparent 70%),
+    radial-gradient(60% 40% at 85% 0%,
+      rgba(59, 130, 246, 0.05) 0%, transparent 70%) !important;
+  background-attachment: fixed !important;
+}
+
+/* ---------- 3. Glass cards (dark) ---------- */
+.card,
+.modal,
+.login-box,
+.calc,
+.ss-dropdown {
+  background: rgba(30, 41, 59, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    0 16px 40px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  color: #e2e8f0 !important;
+}
+.card::before,
+.modal::before,
+.login-box::before {
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.02) 45%,
+    rgba(255, 255, 255, 0) 100%) !important;
+}
+.card::after,
+.modal::after,
+.login-box::after {
+  background:
+    radial-gradient(140% 100% at 0% 0%,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0) 32%),
+    radial-gradient(140% 100% at 100% 100%,
+      rgba(255, 255, 255, 0.03) 0%,
+      rgba(255, 255, 255, 0) 38%) !important;
+}
+
+/* ---------- 4. Sidebar / mobile header / bottom nav ---------- */
+.sidebar {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 6px 0 20px rgba(0, 0, 0, 0.4) !important;
+}
+.mobile-header {
+  background: rgba(15, 23, 42, 0.9) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+#mobile-nav {
+  background: rgba(15, 23, 42, 0.9) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ---------- 5. Inputs ---------- */
+.input,
+input.input,
+select.input,
+textarea.input {
+  background: rgba(15, 23, 42, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #f1f5f9 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+.input::placeholder { color: #64748b !important; }
+.input:focus,
+input.input:focus,
+select.input:focus,
+textarea.input:focus {
+  background: rgba(15, 23, 42, 0.95) !important;
+  border-color: rgba(34, 197, 94, 0.6) !important;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15) !important;
+}
+.label { color: #94a3b8 !important; }
+
+/* ---------- 6. Buttons ---------- */
+.btn-ghost {
+  background: rgba(30, 41, 59, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #cbd5e1 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+.btn-ghost:hover {
+  background: rgba(51, 65, 85, 0.9) !important;
+}
+
+/* ---------- 7. Sidebar nav ---------- */
+.nav a { color: #94a3b8 !important; }
+.nav a:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #e2e8f0 !important;
+}
+.nav a.active {
+  background: rgba(34, 197, 94, 0.15) !important;
+  border: 1px solid rgba(74, 222, 128, 0.25) !important;
+  color: #4ade80 !important;
+}
+
+/* ---------- 8. Mini-stat / stat-icon ---------- */
+.mini-stat {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  color: #e2e8f0 !important;
+}
+.mini-stat .lbl { color: #94a3b8 !important; }
+
+/* ---------- 9. Headings / text ---------- */
+h1, h2, h3, h4 { color: #f1f5f9 !important; }
+p, span, div { color: inherit; }
+
+/* ---------- 10. Tables ---------- */
+th {
+  color: #94a3b8 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+td {
+  color: #cbd5e1 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+}
+tbody tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.02);
+}
+tr:hover td { background: rgba(255, 255, 255, 0.05) !important; }
+
+/* ---------- 11. Login page ---------- */
+.login-page {
+  background: #0a0f1c !important;
+}
+
+/* ---------- 12. Calc keys ---------- */
+.calc-keys button {
+  background: rgba(30, 41, 59, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #e2e8f0 !important;
+}
+.calc-display {
+  background: rgba(15, 23, 42, 0.8) !important;
+  color: #f1f5f9 !important;
+}
+
+/* ---------- 13. Search dropdown ---------- */
+.ss-item { border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; color: #cbd5e1 !important; }
+.ss-item:hover, .ss-item.active { background: rgba(34, 197, 94, 0.12) !important; }
+.ss-add { background: rgba(15, 23, 42, 0.5) !important; color: #4ade80 !important; }
+.ss-add:hover { background: rgba(34, 197, 94, 0.15) !important; }
+.ss-empty { color: #64748b !important; }
+
+/* ---------- 14. Product card redesign elements ---------- */
+.prod-img-box {
+  background: rgba(34, 197, 94, 0.1) !important;
+  border: 1px solid rgba(74, 222, 128, 0.2) !important;
+  color: #4ade80 !important;
+}
+.prod-company { color: #94a3b8 !important; }
+.prod-name { color: #f1f5f9 !important; }
+.prod-tech-name { color: #60a5fa !important; }
+.prod-stock-box {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+.prod-stock-label { color: #94a3b8 !important; }
+.prod-stock-main { color: #f1f5f9 !important; }
+.prod-pack-price { color: #fb923c !important; }
+
+/* ---------- 15. Modal overlay ---------- */
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.65) !important;
+}
+
+/* ---------- 16. Toast ---------- */
+.toast {
+  background: rgba(30, 41, 59, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #f1f5f9 !important;
+}
+
+/* ---------- 17. Table row hover (pill) ---------- */
+table tbody tr:hover td {
+  background: rgba(34, 197, 94, 0.12) !important;
+  color: #86efac !important;
+  border-top: 1px solid rgba(74, 222, 128, 0.2) !important;
+  border-bottom: 1px solid rgba(74, 222, 128, 0.2) !important;
+}
+table tbody tr:hover td:first-child {
+  border-left: 1px solid rgba(74, 222, 128, 0.2) !important;
+}
+table tbody tr:hover td:last-child {
+  border-right: 1px solid rgba(74, 222, 128, 0.2) !important;
+}
+
+/* ---------- 18. Link hover (invoice/customer names) ---------- */
+a[href^="#/invoice/"]:hover,
+a[href^="#/customer/"]:hover {
+  background: rgba(34, 197, 94, 0.2) !important;
+  color: #4ade80 !important;
+}
+
+/* ---------- 19. Product buttons (solid colors) ---------- */
+.prod-btn-group .btn-secondary {
+  background: #475569 !important;
+  color: #e2e8f0 !important;
+}
+
+/* ---------- 20. Print ---------- */
+@media print {
+  body { background: #fff !important; }
+  .card, #print-area { background: #fff !important; color: #000 !important; }
+}
+</style>
 </body>
 </html>
