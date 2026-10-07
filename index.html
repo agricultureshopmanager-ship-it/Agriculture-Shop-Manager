@@ -5395,5 +5395,529 @@ a[href^="#/invoice/"]:hover, a[href^="#/customer/"]:hover {
   }, 250);
 })();
 </script>
+   <script>
+// ==========================================
+// PRO DARK DASHBOARD — Full redesign
+// 6 KPI cards + Sales Trend chart + Parties Overview + Low Stock table
+// ==========================================
+(function() {
+  'use strict';
+
+  window.renderDashboard = function(content) {
+    const inv = DB.invoices;
+    const today = todayStr();
+
+    // ---------- METRICS ----------
+    const totalSales = inv.reduce((s,i) => s + Number(i.total || 0), 0);
+    const todaySales = inv.filter(i => txDate(i,'invoice_date') === today).reduce((s,i) => s + Number(i.total || 0), 0);
+    const totalDue = inv.reduce((s,i) => s + Number(i.due || 0), 0);
+    const overdue = getOverdue30();
+    const supDue = DB.suppliers.reduce((s,su) => s + supplierTotals(su.id).total_due, 0);
+
+    let stockValue = 0;
+    DB.products.forEach(p => { stockValue += (Number(p.stock || 0) * Number(p.cost || 0)); });
+
+    const low = DB.products.filter(p => isLowStock(p));
+
+    // ---------- 6 KPI CARDS ----------
+    // icon in top-right, label, big value, contextual subtext
+    const kpis = [
+      {
+        label: 'Total Sales',
+        value: rs(totalSales),
+        sub: inv.length + ' invoices • all time',
+        icon: '💰',
+        tint: 'rgba(34,197,94,0.14)',   // green
+        border: 'rgba(74,222,128,0.35)',
+        action: 'total-sales'
+      },
+      {
+        label: "Today's Sales",
+        value: rs(todaySales),
+        sub: todaySales > 0 ? '▲ today' : 'no sales yet',
+        icon: '📈',
+        tint: 'rgba(59,130,246,0.14)',  // blue
+        border: 'rgba(96,165,250,0.35)',
+        action: 'today-sales'
+      },
+      {
+        label: 'Customer Due',
+        value: rs(totalDue),
+        sub: 'receivable from customers',
+        icon: '👥',
+        tint: 'rgba(239,68,68,0.14)',   // red
+        border: 'rgba(248,113,113,0.35)',
+        action: 'cust-due'
+      },
+      {
+        label: 'Overdue 30+ days',
+        value: rs(overdue.total),
+        sub: overdue.list.length + ' old invoices',
+        icon: '⏰',
+        tint: 'rgba(220,38,38,0.16)',   // deep red
+        border: 'rgba(248,113,113,0.40)',
+        action: 'overdue30'
+      },
+      {
+        label: 'Supplier Due',
+        value: rs(supDue),
+        sub: 'payable to suppliers',
+        icon: '🚚',
+        tint: 'rgba(251,191,36,0.14)',  // amber
+        border: 'rgba(251,191,36,0.35)',
+        action: 'sup-due'
+      },
+      {
+        label: 'Stock Value',
+        value: rs(stockValue),
+        sub: DB.products.length + ' products • at cost',
+        icon: '📦',
+        tint: 'rgba(139,92,246,0.14)',  // purple
+        border: 'rgba(167,139,250,0.35)',
+        action: null   // not clickable
+      }
+    ];
+
+    const kpiHTML = kpis.map(k => `
+      <div class="dash-kpi ${k.action ? 'dash-clickable' : ''}" data-action="${k.action || ''}">
+        <div class="dash-kpi-top">
+          <div class="dash-kpi-label">${k.label}</div>
+          <div class="dash-kpi-icon" style="background:${k.tint}; border:1px solid ${k.border};">${k.icon}</div>
+        </div>
+        <div class="dash-kpi-value">${k.value}</div>
+        <div class="dash-kpi-sub">${k.sub}</div>
+      </div>
+    `).join('');
+
+    // ---------- PARTIES OVERVIEW ----------
+    // Count distinct customers with "role" hints (we infer from purchase patterns)
+    const totalCustomers = DB.customers.length;
+    const withDue = DB.customers.filter(c => Number(c.due) > 0).length;
+    const cleared = DB.customers.filter(c => Number(c.due) <= 0).length;
+    const partiesHTML = `
+      <div class="dash-parties-row" style="background:rgba(59,130,246,0.10); border:1px solid rgba(96,165,250,0.20);">
+        <div>
+          <div class="dash-party-label" style="color:#93c5fd;">Active Customers</div>
+          <div class="dash-party-value" style="color:#60a5fa;">${totalCustomers}</div>
+          <div class="dash-party-sub">total in your book</div>
+        </div>
+      </div>
+      <div class="dash-parties-row" style="background:rgba(239,68,68,0.10); border:1px solid rgba(248,113,113,0.20);">
+        <div>
+          <div class="dash-party-label" style="color:#fca5a5;">With Pending Due</div>
+          <div class="dash-party-value" style="color:#f87171;">${withDue}</div>
+          <div class="dash-party-sub">need follow-up</div>
+        </div>
+      </div>
+      <div class="dash-parties-row" style="background:rgba(34,197,94,0.10); border:1px solid rgba(74,222,128,0.20);">
+        <div>
+          <div class="dash-party-label" style="color:#86efac;">Fully Cleared</div>
+          <div class="dash-party-value" style="color:#4ade80;">${cleared}</div>
+          <div class="dash-party-sub">no outstanding balance</div>
+        </div>
+      </div>
+    `;
+
+    // ---------- LOW STOCK TABLE ----------
+    const lowStockRows = low.slice(0, 8).map(p => {
+      const d = productDisplay(p);
+      const unit = (p.dual ? p.base_unit : p.unit);
+      const alertVal = fmtNum(p.low_stock_alert) + ' ' + unit;
+      return `
+        <tr class="dash-low-row">
+          <td><b style="color:#f1f5f9;">${esc(p.name)}</b></td>
+          <td>
+            <span class="dash-cat-pill">${esc(p.category || 'Other')}</span>
+          </td>
+          <td style="text-align:right;color:#f87171;font-weight:600;">${esc(d.stockLabel)}</td>
+          <td style="text-align:right;color:#94a3b8;">${esc(alertVal)}</td>
+          <td style="text-align:right;">
+            <button class="dash-restock-btn" data-restock="${p.id}">Restock</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    // ---------- RENDER ----------
+    content.innerHTML = `
+      <style>
+        /* ------- DASHBOARD-ONLY STYLES ------- */
+        .dash-page { display:flex; flex-direction:column; gap:18px; }
+
+        /* KPI grid — 6 in a row on wide screens */
+        .dash-kpi-grid {
+          display:grid;
+          grid-template-columns: repeat(6, 1fr);
+          gap:14px;
+        }
+        @media(max-width:1400px){ .dash-kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media(max-width:900px){ .dash-kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media(max-width:560px){ .dash-kpi-grid { grid-template-columns: 1fr; } }
+
+        .dash-kpi {
+          position:relative;
+          padding:16px 16px 14px;
+          border-radius:20px;
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%),
+            rgba(22,22,26,0.55);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border:1px solid rgba(255,255,255,0.08);
+          box-shadow:
+            0 1px 1px rgba(0,0,0,0.35),
+            0 8px 20px rgba(0,0,0,0.35),
+            inset 0 1px 0 rgba(255,255,255,0.06);
+          transition: transform .25s cubic-bezier(.175,.885,.32,1.275), box-shadow .25s ease, border-color .25s ease;
+          overflow:hidden;
+        }
+        .dash-clickable { cursor:pointer; }
+        .dash-kpi:hover {
+          transform: translateY(-4px);
+          border-color: rgba(74,222,128,0.28);
+          box-shadow:
+            0 2px 6px rgba(0,0,0,0.4),
+            0 16px 40px rgba(0,0,0,0.5),
+            0 0 0 1px rgba(74,222,128,0.20),
+            0 0 32px rgba(34,197,94,0.14);
+        }
+        .dash-kpi-top {
+          display:flex; justify-content:space-between; align-items:flex-start;
+          gap:8px; margin-bottom:10px;
+        }
+        .dash-kpi-label {
+          font-size:11px; font-weight:700; letter-spacing:.6px;
+          text-transform:uppercase; color:#94a3b8;
+        }
+        .dash-kpi-icon {
+          width:34px; height:34px; border-radius:10px;
+          display:flex; align-items:center; justify-content:center;
+          font-size:16px; flex-shrink:0;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+        }
+        .dash-kpi-value {
+          font-size:19px; font-weight:700; color:#f1f5f9;
+          line-height:1.2; letter-spacing:-0.2px;
+        }
+        .dash-kpi-sub {
+          font-size:11px; color:#94a3b8; margin-top:5px;
+          white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+        }
+
+        /* Two-column row: chart + parties */
+        .dash-two-col {
+          display:grid;
+          grid-template-columns: 2fr 1fr;
+          gap:14px;
+        }
+        @media(max-width:900px){ .dash-two-col { grid-template-columns: 1fr; } }
+
+        .dash-panel {
+          padding:18px;
+          border-radius:20px;
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.00) 100%),
+            rgba(22,22,26,0.55);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border:1px solid rgba(255,255,255,0.07);
+          box-shadow:
+            0 1px 1px rgba(0,0,0,0.35),
+            0 8px 20px rgba(0,0,0,0.35),
+            inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+        .dash-panel-head {
+          display:flex; justify-content:space-between; align-items:center;
+          margin-bottom:14px;
+        }
+        .dash-panel-title {
+          font-size:14px; font-weight:700; color:#f1f5f9;
+          letter-spacing:-0.1px;
+        }
+        .dash-panel-sub {
+          font-size:11px; color:#94a3b8;
+        }
+        .dash-chart-wrap { position:relative; height:260px; }
+
+        .dash-parties-row {
+          padding:14px 16px;
+          border-radius:14px;
+          margin-bottom:10px;
+          transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .dash-parties-row:last-child { margin-bottom:0; }
+        .dash-parties-row:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+        }
+        .dash-party-label {
+          font-size:10px; font-weight:700; text-transform:uppercase;
+          letter-spacing:1px;
+        }
+        .dash-party-value {
+          font-size:24px; font-weight:800; line-height:1.1; margin-top:4px;
+        }
+        .dash-party-sub {
+          font-size:11px; color:#94a3b8; margin-top:2px;
+        }
+
+        /* Low stock table */
+        .dash-low-table {
+          width:100%; border-collapse:collapse; margin-top:4px;
+        }
+        .dash-low-table th {
+          font-size:11px; color:#94a3b8; font-weight:600;
+          text-transform:uppercase; letter-spacing:.5px;
+          padding:10px 12px; text-align:left;
+          border-bottom:1px solid rgba(255,255,255,0.06);
+        }
+        .dash-low-table td {
+          padding:12px; font-size:13px;
+          border-bottom:1px solid rgba(255,255,255,0.035);
+          color:#cbd5e1;
+        }
+        .dash-low-row:hover td {
+          background: linear-gradient(90deg, rgba(34,197,94,0.10) 0%, rgba(34,197,94,0.02) 100%);
+        }
+        .dash-cat-pill {
+          display:inline-block; padding:3px 10px; border-radius:999px;
+          background: rgba(148,163,184,0.12);
+          color:#cbd5e1; font-size:11px; font-weight:500;
+          border:1px solid rgba(255,255,255,0.06);
+        }
+        .dash-restock-btn {
+          background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+          color:#fff; border:1px solid rgba(255,255,255,0.2);
+          padding:6px 14px; border-radius:999px;
+          font-size:12px; font-weight:600; cursor:pointer;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 2px 8px rgba(34,197,94,0.3);
+          transition: all .2s ease;
+        }
+        .dash-restock-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 6px 16px rgba(34,197,94,0.45);
+        }
+      </style>
+
+      <div class="dash-page">
+
+        <!-- PAGE HEADER -->
+        <div class="page-head">
+          <div>
+            <h1 style="font-size:22px;font-weight:700;">Dashboard</h1>
+            <p style="color:var(--s500);font-size:13px;">Welcome back, ${esc(SETTINGS.owner_name)}</p>
+          </div>
+          <div class="page-actions">${reportButtonsHTML('dash')}</div>
+        </div>
+
+        <!-- 6 KPI CARDS -->
+        <div class="dash-kpi-grid">${kpiHTML}</div>
+
+        <!-- CHART + PARTIES -->
+        <div class="dash-two-col">
+          <div class="dash-panel">
+            <div class="dash-panel-head">
+              <div>
+                <div class="dash-panel-title">Sales Trend</div>
+                <div class="dash-panel-sub">Last 30 days</div>
+              </div>
+            </div>
+            <div class="dash-chart-wrap"><canvas id="dashSalesChart"></canvas></div>
+          </div>
+
+          <div class="dash-panel">
+            <div class="dash-panel-head">
+              <div class="dash-panel-title">Parties Overview</div>
+            </div>
+            ${partiesHTML}
+          </div>
+        </div>
+
+        <!-- LOW STOCK TABLE -->
+        <div class="dash-panel">
+          <div class="dash-panel-head">
+            <div>
+              <div class="dash-panel-title">Low Stock Alerts</div>
+              <div class="dash-panel-sub">${low.length} item${low.length===1?'':'s'} need restocking</div>
+            </div>
+          </div>
+          ${low.length === 0
+            ? '<p style="color:#94a3b8;font-size:13px;padding:20px 0;">All products are well-stocked 🎉</p>'
+            : `<table class="dash-low-table">
+                <thead><tr>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th style="text-align:right;">Stock</th>
+                  <th style="text-align:right;">Alert At</th>
+                  <th></th>
+                </tr></thead>
+                <tbody>${lowStockRows}</tbody>
+              </table>`}
+        </div>
+
+      </div>
+    `;
+
+    // ---------- BIND KPI ACTIONS ----------
+    content.querySelectorAll('[data-action]').forEach(el => {
+      const a = el.getAttribute('data-action');
+      if (!a) return;
+      el.onclick = () => {
+        if (a === 'total-sales') showSalesModal('All Sales', DB.invoices.slice().sort((x,y)=>txDate(y,'invoice_date').localeCompare(txDate(x,'invoice_date'))));
+        else if (a === 'today-sales') showSalesModal("Today's Sales", DB.invoices.filter(i => txDate(i,'invoice_date') === today));
+        else if (a === 'cust-due') showCustomerDueModal();
+        else if (a === 'sup-due') showSupplierDueModal();
+        else if (a === 'overdue30') showOverdueModal();
+      };
+    });
+
+    // ---------- BIND RESTOCK BUTTONS ----------
+    content.querySelectorAll('[data-restock]').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const pId = btn.getAttribute('data-restock');
+        const p = DB.products.find(x => x.id === pId);
+        if (!p) return;
+        const isDual = p.dual;
+        const baseUnit = isDual ? p.base_unit : p.unit;
+        const packUnit = isDual ? p.pack_unit : '';
+        const packSize = isDual ? Number(p.pack_size) : 1;
+        const currentStockDisplay = isDual
+          ? `${fmtNum(p.stock)} ${baseUnit} (${fmtNum(Number(p.stock)/packSize)} ${packUnit})`
+          : `${fmtNum(p.stock)} ${p.unit}`;
+        openModal(`
+          <h2 style="font-size:16px;font-weight:600;margin-bottom:12px;">Restock: ${esc(p.name)}</h2>
+          <div style="background:var(--s50);padding:10px;border-radius:8px;margin-bottom:12px;font-size:13px;">
+            Current Stock: <b>${currentStockDisplay}</b>
+          </div>
+          <form id="restock-form" style="display:flex;flex-direction:column;gap:12px;">
+            ${isDual ? `<div><label class="label">Adding by</label><select class="input" name="add_type"><option value="pack">${packUnit} (1 ${packUnit} = ${packSize} ${baseUnit})</option><option value="base">${baseUnit}</option></select></div>` : ''}
+            <div><label class="label">Quantity to Add *</label><input class="input" type="number" step="0.01" name="qty" required autofocus placeholder="e.g. 5"></div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+              <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+              <button class="btn btn-primary" id="restock-save">Add Stock</button>
+            </div>
+          </form>`, root => {
+          root.querySelector('#restock-form').onsubmit = async ev => {
+            ev.preventDefault();
+            const fd = new FormData(ev.target);
+            const qty = Number(fd.get('qty')) || 0;
+            if (qty <= 0) { toast('Quantity must be > 0', 'error'); return; }
+            const addType = isDual ? fd.get('add_type') : 'base';
+            let addedBaseQty = qty;
+            if (isDual && addType === 'pack') addedBaseQty = qty * packSize;
+            const newStock = (Number(p.stock) || 0) + addedBaseQty;
+            const sbtn = root.querySelector('#restock-save');
+            sbtn.disabled = true; sbtn.textContent = 'Updating...';
+            const { error } = await sb.from('products').update({ stock: newStock }).eq('id', p.id);
+            if (error) { toast(error.message, 'error'); sbtn.disabled = false; sbtn.textContent = 'Add Stock'; return; }
+            await syncDB();
+            toast('Stock added successfully!', 'success');
+            closeModal();
+            route();
+          };
+        });
+      };
+    });
+
+    // ---------- SALES TREND CHART ----------
+    const dayMap = {};
+    const days = 30;
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0,10);
+      dayMap[key] = 0;
+    }
+    inv.forEach(i => {
+      const d = txDate(i,'invoice_date');
+      if (dayMap[d] !== undefined) dayMap[d] += Number(i.total || 0);
+    });
+    const labels = Object.keys(dayMap).map(d => d.slice(5));
+    const values = Object.values(dayMap);
+
+    setTimeout(() => {
+      const canvas = document.getElementById('dashSalesChart');
+      if (!canvas) return;
+      // destroy any prior instance
+      if (window._dashChart) { try { window._dashChart.destroy(); } catch(e){} }
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createLinearGradient(0, 0, 0, 260);
+      grad.addColorStop(0, 'rgba(34,197,94,0.45)');
+      grad.addColorStop(1, 'rgba(34,197,94,0.00)');
+
+      window._dashChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            borderColor: '#22c55e',
+            backgroundColor: grad,
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.35,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: '#22c55e',
+            pointHoverBorderColor: '#fff',
+            pointHoverBorderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 800, easing: 'easeOutCubic' },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(15,23,42,0.95)',
+              borderColor: 'rgba(74,222,128,0.3)',
+              borderWidth: 1,
+              padding: 10,
+              cornerRadius: 10,
+              titleColor: '#86efac',
+              bodyColor: '#f1f5f9',
+              callbacks: { label: c => rs(c.parsed.y) }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#64748b', font: { size: 10 }, maxRotation: 0, autoSkipPadding: 20 }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: {
+                color: '#64748b', font: { size: 10 },
+                callback: v => '₹' + (v >= 1000 ? (v/1000).toFixed(0) + 'k' : v)
+              }
+            }
+          }
+        }
+      });
+    }, 60);
+
+    // ---------- BIND REPORTS ----------
+    const kpisReport = [
+      ['Total Sales', rs(totalSales)],
+      ["Today's Sales", rs(todaySales)],
+      ['Customer Due', rs(totalDue)],
+      ['Overdue 30+', rs(overdue.total)],
+      ['Supplier Due', rs(supDue)],
+      ['Stock Value', rs(stockValue)]
+    ];
+    const tables = [{
+      title: 'Low Stock Products',
+      head: ['Product', 'Stock', 'Low Alert'],
+      rows: low.length ? low.map(p => {
+        const d = productDisplay(p);
+        return [p.name, d.stockLabel, fmtNum(p.low_stock_alert) + ' ' + ((p.dual) ? p.base_unit : p.unit)];
+      }) : []
+    }];
+    bindReport('dash','Business Summary',kpisReport,tables);
+  };
+})();
+</script>
 </body>
 </html>
